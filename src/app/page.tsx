@@ -1,57 +1,39 @@
 "use client";
 
-import { Combobox } from "@/ui/combobox";
+import { User, users } from "@/consts/users";
+import { Select } from "@/ui/select";
 import { useState } from "react";
 
-type Option = {
-  name: string;
-  sex: "male" | "female";
-  age: number;
-};
-
-const options: Option[] = [
-  {
-    name: "John Doe",
-    sex: "male",
-    age: 30,
-  },
-  {
-    name: "Jane Doe",
-    sex: "female",
-    age: 25,
-  },
-  {
-    name: "Bob Smith",
-    sex: "male",
-    age: 40,
-  },
-  {
-    name: "Alice Smith",
-    sex: "female",
-    age: 35,
-  },
-];
-
 export default function Home() {
-  const [value, setValue] = useState<Option | null>(null);
+  const [value, setValue] = useState<User | null>(null);
+  console.log(value);
+  console.log(users.length);
+
   return (
     <div className="p-4">
-      <Combobox
-        options={options}
+      <Select
+        isMulti
+        options={users}
         value={value}
-        onChange={(v) => v && setValue(v)}
-        searchBy="name"
-        render={({ age, name, sex }) => (
-          <div className="flex flex-col">
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground">{age}</span>
-              <span>{name}</span>
-            </div>
-            <span className="text-xs text-muted-foreground">{sex}</span>
-          </div>
-        )}
-        renderSelected={"name"}
+        onChange={(v) => setValue(v)}
+        renderOption={RenderItem}
+        renderSelected={}
+        searchBy={["name", "age", "email", "region"]}
       />
     </div>
   );
 }
+
+const RenderItem = ({ age, name, email, phone, region }: User) => {
+  return (
+    <div className="flex flex-col">
+      <div>
+        <span>{name}, </span>
+        <span className="text-xs text-muted-foreground">{age}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">{email}</p>
+      <p className="text-xs text-muted-foreground">{region}</p>
+      <p className="text-xs text-muted-foreground text-emerald-500">{phone}</p>
+    </div>
+  );
+};
