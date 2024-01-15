@@ -14,10 +14,8 @@ import {
 } from "@/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Drawer, DrawerContent, DrawerTrigger } from "../drawer";
-import { SelectListProps, SelectProps } from "./types";
+import { SelectButtonProps, SelectListProps, SelectProps } from "./types";
 import { useSelect } from "./use-select";
-
-const VALUE_SEPARATOR = " *!& ";
 
 export const Select = <
   Option extends Record<string, unknown>,
@@ -25,18 +23,28 @@ export const Select = <
 >(
   props: SelectProps<Option, isMulti>
 ) => {
+  const { options, value, searchBy, searchPlaceholder, className } = props;
+
   const {
+    isDesktop,
+    isMounted,
+    open,
+    setOpen,
+    getRenderSelected,
+    getOptionValue,
+    getRenderOption,
+    handleOptionChange,
+  } = useSelect(props);
+
+  const listProps: SelectListProps<Option, isMulti> = {
+    getOptionValue,
+    getRenderOption,
+    handleOptionChange,
     options,
     value,
-    className,
-    placeholder,
-    renderSelected,
-    isMulti,
-    ...rest
-  } = props;
-
-  const { isDesktop, isMounted, open, setOpen, getRenderSelected } =
-    useSelect(props);
+    searchBy,
+    searchPlaceholder,
+  };
 
   if (!isMounted) {
     return null;
@@ -46,24 +54,14 @@ export const Select = <
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("justify-between", className)}
-          >
-            {getRenderSelected()}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          <SelectButton
+            getRenderSelected={getRenderSelected}
+            open={open}
+            className={className}
+          />
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
-          <List
-            options={options}
-            value={value}
-            setOpen={setOpen}
-            renderSelected={renderSelected}
-            {...rest}
-          />
+          <List {...listProps} />
         </PopoverContent>
       </Popover>
     );
@@ -72,121 +70,54 @@ export const Select = <
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("justify-between", className)}
-        >
-          {getRenderSelected()}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+        <SelectButton
+          getRenderSelected={getRenderSelected}
+          open={open}
+          className={className}
+        />
       </DrawerTrigger>
       <DrawerContent>
         <div className="mt-4 border-t">
-          <List
-            options={options}
-            value={value}
-            setOpen={setOpen}
-            renderSelected={renderSelected}
-            {...rest}
-          />
+          <List {...listProps} />
         </div>
       </DrawerContent>
     </Drawer>
   );
 };
 
+const SelectButton = React.forwardRef<
+  React.ElementRef<typeof Button>,
+  React.ComponentPropsWithoutRef<typeof Button> & SelectButtonProps
+>(({ getRenderSelected, open, className, ...rest }, ref) => {
+  return (
+    <Button
+      ref={ref}
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      className={cn("justify-between h-auto min-h-10 truncate", className)}
+      {...rest}
+    >
+      {getRenderSelected()}
+      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+    </Button>
+  );
+});
+
+SelectButton.displayName = "SelectButton";
+
 const List = <
   Option extends Record<string, unknown>,
   isMulti extends boolean = false
 >({
-  onChange,
   options,
-  setOpen,
   value,
-  renderOption,
+  getOptionValue,
+  getRenderOption,
+  handleOptionChange,
   searchBy,
   searchPlaceholder,
-  isMulti,
 }: SelectListProps<Option, isMulti>) => {
-  const handleChange = (newValue: string) => {
-    if (!isMulti && !searchBy) {
-      // TODO: Single option selection by index
-    }
-
-    if (!isMulti && searchBy) {
-      // TODO: Single option selection by keyof Option or keyof Option[]
-    }
-
-    if (isMulti && !searchBy) {
-      // TODO: Multiple option selection by index
-    }
-
-    if (isMulti && searchBy) {
-      // TODO: Multiple option selection by keyof Option or keyof Option[]
-    }
-
-    if (Array.isArray(searchBy)) {
-      const newOptionValues = newValue.split(VALUE_SEPARATOR);
-      const newOptionKeyValuesArrays = searchBy.map((key, index) => [
-        key,
-        newOptionValues[index],
-      ]);
-      const newOption = Object.fromEntries(newOptionKeyValuesArrays);
-
-      const selectedOption = options.find((option) =>
-        searchBy.every((key) => {
-          const optionValue = String(option[key as keyof Option]).toLowerCase();
-          const newOptionValue = String(
-            newOption[key as keyof Option]
-          ).toLowerCase();
-
-          return optionValue === newOptionValue;
-        })
-      )!;
-      onChange(selectedOption);
-      setOpen(false);
-      return;
-    }
-
-    if (typeof searchBy === "string") {
-      const selectedOption = options.find(
-        (option) =>
-          String(option[searchBy as keyof Option]).toLowerCase() === newValue
-      ) as Option;
-
-      onChange(selectedOption);
-      setOpen(false);
-      return;
-    }
-
-    onChange(options[parseInt(newValue)]);
-    setOpen(false);
-  };
-
-  const getOptionValue = (option: Option, index: number) => {
-    if (Array.isArray(searchBy)) {
-      return searchBy
-        .map((key) => option[key as keyof Option])
-        .join(VALUE_SEPARATOR);
-    }
-
-    if (typeof searchBy === "string") {
-      return String(option[searchBy as keyof Option]);
-    }
-
-    return index.toString();
-  };
-
-  const getRenderValue = (option: Option) => {
-    if (typeof renderOption === "function") {
-      return renderOption(option);
-    }
-
-    return String(option[renderOption as keyof Option]);
-  };
-
   return (
     <Command className="max-h-[30vh] overflow-hidden">
       {searchBy && (
@@ -201,13 +132,18 @@ const List = <
           <CommandItem
             key={index}
             value={getOptionValue(option, index)}
-            onSelect={(v) => handleChange(searchBy ? v : index.toString())}
+            onSelect={(v) =>
+              handleOptionChange(searchBy ? v : index.toString())
+            }
           >
-            {getRenderValue(option)}
+            {getRenderOption(option)}
             <Check
               className={cn(
                 "ml-auto h-4 w-4",
-                value === option ? "opacity-100" : "opacity-0"
+                value === option ||
+                  (Array.isArray(value) && value.includes(option))
+                  ? "opacity-100"
+                  : "opacity-0"
               )}
             />
           </CommandItem>

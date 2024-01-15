@@ -6,19 +6,21 @@ import { useState } from "react";
 
 export default function Home() {
   const [value, setValue] = useState<User | null>(null);
+  const [multiValue, setMultiValue] = useState<User[]>([]);
   console.log(value);
   console.log(users.length);
 
   return (
     <div className="p-4">
       <Select
+        className="max-w-screen-sm"
         isMulti
         options={users}
-        value={value}
-        onChange={(v) => setValue(v)}
+        value={multiValue}
+        onChange={(v) => setMultiValue(v)}
         renderOption={RenderItem}
-        renderSelected={}
-        searchBy={["name", "age", "email", "region"]}
+        renderSelected={"email"}
+        // searchBy={["name", "email", "region"]}
       />
     </div>
   );

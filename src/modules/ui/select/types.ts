@@ -1,14 +1,14 @@
+import { Dispatch, SetStateAction } from "react";
+
 export type SelectOptionValue = Record<string, unknown>;
 
 export type SelectProps<
   Option extends SelectOptionValue,
-  isMulti extends boolean = false
+  isMulti extends boolean
 > = {
   options: Option[];
   value: isMulti extends true ? Option[] : Option | null;
-  onChange: isMulti extends true
-    ? (value: Option[]) => void
-    : (value: Option) => void;
+  onChange: (value: isMulti extends true ? Option[] : Option) => void;
   renderSelected: ((option: Option) => React.ReactNode) | keyof Option;
   renderOption: ((option: Option) => React.ReactNode) | keyof Option;
   isMulti?: isMulti;
@@ -18,17 +18,55 @@ export type SelectProps<
   searchPlaceholder?: string;
 };
 
+export type SelectButtonProps = {
+  className?: string;
+  open: boolean;
+  getRenderSelected: () =>
+    | string
+    | number
+    | boolean
+    | React.JSX.Element
+    | Iterable<React.ReactNode>
+    | React.PromiseLikeOfReactNode
+    | null
+    | undefined;
+};
 export type SelectListProps<
   Option extends SelectOptionValue,
   isMulti extends boolean = false
 > = {
-  setOpen: (open: boolean) => void;
-} & SelectProps<Option, isMulti>;
+  getOptionValue: (option: Option, index: number) => string;
+  getRenderOption: (option: Option) => React.ReactNode;
+  handleOptionChange: (newValue: string) => void;
+} & Pick<
+  SelectProps<Option, isMulti>,
+  "options" | "value" | "searchBy" | "searchPlaceholder"
+>;
 
-export type RenderOptionSelectedProps<
+export type SelectRenderOptionSelectedProps<
   Option extends SelectOptionValue,
   isMulti extends boolean
 > = Pick<
   SelectProps<Option, isMulti>,
   "renderSelected" | "isMulti" | "placeholder" | "value"
+>;
+
+export type SelectRenderOptionProps<
+  Option extends SelectOptionValue,
+  isMulti extends boolean
+> = Pick<SelectProps<Option, isMulti>, "renderOption">;
+
+export type SelectOptionValueProps<
+  Option extends SelectOptionValue,
+  isMulti extends boolean
+> = Pick<SelectProps<Option, isMulti>, "searchBy">;
+
+export type SelectOptionChangeProps<
+  Option extends SelectOptionValue,
+  isMulti extends boolean
+> = {
+  setOpen: Dispatch<SetStateAction<boolean>>;
+} & Pick<
+  SelectProps<Option, isMulti>,
+  "value" | "onChange" | "options" | "isMulti" | "searchBy"
 >;
