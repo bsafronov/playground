@@ -1,21 +1,29 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
+// import {
+//   Command,
+//   CommandEmpty,
+//   CommandGroup,
+//   CommandInput,
+//   CommandItem,
+// } from "@/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
+import { Drawer, DrawerContent, DrawerTrigger } from "../drawer";
+import { selectStyles } from "./styles";
+import { SelectButtonProps, SelectListProps, SelectProps } from "./types";
+import { useSelect } from "./use-select";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "../drawer";
-import { SelectButtonProps, SelectListProps, SelectProps } from "./types";
-import { useSelect } from "./use-select";
+} from "cmdk";
 
 export const Select = <
   Option extends Record<string, unknown>,
@@ -23,7 +31,8 @@ export const Select = <
 >(
   props: SelectProps<Option, isMulti>
 ) => {
-  const { options, value, searchBy, searchPlaceholder, className } = props;
+  const { options, value, searchBy, searchPlaceholder, className, listType } =
+    props;
 
   const {
     isDesktop,
@@ -50,7 +59,9 @@ export const Select = <
     return null;
   }
 
-  if (isDesktop) {
+  const isPopover = listType ? listType === "popover" : isDesktop;
+
+  if (isPopover) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -60,7 +71,7 @@ export const Select = <
             className={className}
           />
         </PopoverTrigger>
-        <PopoverContent className="p-0" align="start">
+        <PopoverContent className="p-0 w-full" align="start">
           <List {...listProps} />
         </PopoverContent>
       </Popover>
@@ -77,7 +88,7 @@ export const Select = <
         />
       </DrawerTrigger>
       <DrawerContent>
-        <div className="mt-4 border-t">
+        <div className={selectStyles.drawerListContainer}>
           <List {...listProps} />
         </div>
       </DrawerContent>
@@ -90,17 +101,16 @@ const SelectButton = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Button> & SelectButtonProps
 >(({ getRenderSelected, open, className, ...rest }, ref) => {
   return (
-    <Button
+    <button
       ref={ref}
-      variant="outline"
-      role="combobox"
       aria-expanded={open}
-      className={cn("justify-between h-auto min-h-10 truncate", className)}
+      aria-roledescription="select"
+      className={cn(selectStyles.button, className)}
       {...rest}
     >
       {getRenderSelected()}
-      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-    </Button>
+      {selectStyles.chevron}
+    </button>
   );
 });
 
@@ -120,12 +130,15 @@ const List = <
 }: SelectListProps<Option, isMulti>) => {
   return (
     <Command className="max-h-[30vh] overflow-hidden">
-      {searchBy && (
-        <CommandInput
-          placeholder={searchPlaceholder ?? "Поиск..."}
-          className="h-9"
-        />
-      )}
+      {searchBy &&
+        selectStyles.search({
+          field: ({ className, placeholder }) => (
+            <CommandInput
+              placeholder={searchPlaceholder ?? placeholder}
+              className={cn(className)}
+            />
+          ),
+        })}
       <CommandEmpty>Ничего не найдено...</CommandEmpty>
       <CommandGroup className="overflow-y-auto">
         {options.map((option, index) => (
@@ -136,16 +149,12 @@ const List = <
               handleOptionChange(searchBy ? v : index.toString())
             }
           >
-            {getRenderOption(option)}
-            <Check
-              className={cn(
-                "ml-auto h-4 w-4",
+            {selectStyles.option({
+              active:
                 value === option ||
-                  (Array.isArray(value) && value.includes(option))
-                  ? "opacity-100"
-                  : "opacity-0"
-              )}
-            />
+                (Array.isArray(value) && value.includes(option)),
+              children: getRenderOption(option),
+            })}
           </CommandItem>
         ))}
       </CommandGroup>

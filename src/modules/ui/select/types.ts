@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction } from "react";
 
 export type SelectOptionValue = Record<string, unknown>;
 
@@ -16,6 +16,7 @@ export type SelectProps<
   className?: string;
   placeholder?: string;
   searchPlaceholder?: string;
+  listType?: "popover" | "drawer";
 };
 
 export type SelectButtonProps = {
@@ -70,3 +71,29 @@ export type SelectOptionChangeProps<
   SelectProps<Option, isMulti>,
   "value" | "onChange" | "options" | "isMulti" | "searchBy"
 >;
+
+export type SelectStyleProps = {
+  button?: string;
+  optionSelected?: string;
+  optionSelectedContainer?: string;
+  drawerListContainer?: string;
+  chevron?: ReactNode;
+  option: ({
+    active,
+    children,
+  }: {
+    children?: ReactNode;
+    active?: boolean;
+  }) => ReactNode;
+  search: SelectStyleSearchRender;
+  searchPlaceholder?: string;
+};
+
+type SelectStyleSearchRender = (props: SelectStyleSearchProps) => ReactNode;
+type SelectStyleSearchProps = {
+  field: (props: SelectStyleSearchPropField) => ReactNode;
+};
+type SelectStyleSearchPropField = {
+  placeholder: string;
+  className: string;
+};

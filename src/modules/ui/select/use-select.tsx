@@ -1,12 +1,13 @@
-import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
+import { Fragment, ReactNode, useEffect, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
+import { selectStyles } from "./styles";
 import {
-  SelectRenderOptionProps,
-  SelectRenderOptionSelectedProps,
+  SelectOptionChangeProps,
   SelectOptionValue,
   SelectOptionValueProps,
   SelectProps,
-  SelectOptionChangeProps,
+  SelectRenderOptionProps,
+  SelectRenderOptionSelectedProps,
 } from "./types";
 
 const VALUE_SEPARATOR = " *!& ";
@@ -151,7 +152,7 @@ const useRenderSelected = <
 
     if (typeof renderSelected === "function") {
       return (
-        <div className="flex flex-wrap gap-1">
+        <div className={selectStyles.optionSelectedContainer}>
           {selectedValues.map((option, index) => (
             <Fragment key={index}>{renderSelected(option)}</Fragment>
           ))}
@@ -160,11 +161,13 @@ const useRenderSelected = <
     }
 
     return (
-      <span className="w-full truncate">
-        {selectedValues
-          .map((option) => option[renderSelected as keyof Option])
-          .join(", ")}
-      </span>
+      <div className={selectStyles.optionSelectedContainer}>
+        {selectedValues.map((option, index) => (
+          <div className={selectStyles.optionSelected} key={index}>
+            {String(option[renderSelected as keyof Option])}
+          </div>
+        ))}
+      </div>
     );
   };
 
