@@ -1,29 +1,22 @@
 "use client";
 
-import { Check } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/ui/button";
-// import {
-//   Command,
-//   CommandEmpty,
-//   CommandGroup,
-//   CommandInput,
-//   CommandItem,
-// } from "@/ui/command";
+import { Button, buttonVariants } from "@/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "../drawer";
-import { selectStyles } from "./styles";
-import { SelectButtonProps, SelectListProps, SelectProps } from "./types";
-import { useSelect } from "./use-select";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "cmdk";
+  CommandList,
+} from "../command";
+import { Drawer, DrawerContent, DrawerTrigger } from "../drawer";
+import { selectConfig } from "./config";
+import { SelectButtonProps, SelectListProps, SelectProps } from "./types";
+import { useSelect } from "./use-select";
 
 export const Select = <
   Option extends Record<string, unknown>,
@@ -71,7 +64,10 @@ export const Select = <
             className={className}
           />
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-full" align="start">
+        <PopoverContent
+          className={cn(selectConfig.popoverClassName)}
+          align="start"
+        >
           <List {...listProps} />
         </PopoverContent>
       </Popover>
@@ -88,7 +84,7 @@ export const Select = <
         />
       </DrawerTrigger>
       <DrawerContent>
-        <div className={selectStyles.drawerListContainer}>
+        <div className={cn(selectConfig.drawerClassName)}>
           <List {...listProps} />
         </div>
       </DrawerContent>
@@ -105,11 +101,16 @@ const SelectButton = React.forwardRef<
       ref={ref}
       aria-expanded={open}
       aria-roledescription="select"
-      className={cn(selectStyles.button, className)}
+      className={cn(
+        buttonVariants({ variant: "outline" }),
+        "h-auto gap-2 ",
+        selectConfig.triggerClassName,
+        className
+      )}
       {...rest}
     >
       {getRenderSelected()}
-      {selectStyles.chevron}
+      {selectConfig.triggerChevronIcon?.({ open })}
     </button>
   );
 });
@@ -129,35 +130,37 @@ const List = <
   searchPlaceholder,
 }: SelectListProps<Option, isMulti>) => {
   return (
-    <Command className="max-h-[30vh] overflow-hidden">
-      {searchBy &&
-        selectStyles.search({
-          field: ({ className, placeholder }) => (
-            <CommandInput
-              placeholder={searchPlaceholder ?? placeholder}
-              className={cn(className)}
-            />
-          ),
-        })}
-      <CommandEmpty>Ничего не найдено...</CommandEmpty>
-      <CommandGroup className="overflow-y-auto">
-        {options.map((option, index) => (
-          <CommandItem
-            key={index}
-            value={getOptionValue(option, index)}
-            onSelect={(v) =>
-              handleOptionChange(searchBy ? v : index.toString())
-            }
-          >
-            {selectStyles.option({
-              active:
-                value === option ||
-                (Array.isArray(value) && value.includes(option)),
-              children: getRenderOption(option),
-            })}
-          </CommandItem>
-        ))}
-      </CommandGroup>
+    <Command>
+      {searchBy && (
+        <CommandInput
+          placeholder={searchPlaceholder ?? selectConfig.searchPlaceholder}
+          className={selectConfig.searchClassName}
+        />
+      )}
+      <CommandList className={selectConfig.listClassName}>
+        <CommandEmpty className={selectConfig.emptyClassName}>
+          {selectConfig.emptyPlaceholder}
+        </CommandEmpty>
+        <CommandGroup>
+          {options.map((option, index) => (
+            <CommandItem
+              key={index}
+              value={getOptionValue(option, index)}
+              onSelect={(v) =>
+                handleOptionChange(searchBy ? v : index.toString())
+              }
+              className={selectConfig.optionClassName}
+            >
+              {getRenderOption(option)}
+              {selectConfig.optionIcon?.({
+                isSelected:
+                  value === option ||
+                  (Array.isArray(value) && value.includes(option)),
+              })}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
     </Command>
   );
 };

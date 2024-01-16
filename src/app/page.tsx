@@ -2,22 +2,21 @@
 
 import { User, users } from "@/consts/users";
 import { Select } from "@/ui/select";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export default function Home() {
   const [value, setValue] = useState<User | null>(null);
   const [multiValue, setMultiValue] = useState<User[]>([]);
-  console.log(multiValue);
 
   return (
     <div className="p-4">
       <Select
         isMulti
-        className="px-2"
         options={users}
         value={multiValue}
         onChange={(v) => setMultiValue(v)}
-        renderOption={RenderItem}
+        renderOption={"name"}
         renderSelected={"name"}
         searchBy={["name", "email", "region"]}
         listType="popover"
@@ -40,10 +39,16 @@ const RenderItem = ({ age, name, email, phone, region }: User) => {
   );
 };
 
-const RenderSelectedItem = ({ name, email }: User) => {
+const RenderSelectedItem = (user: User, handleDelete: Function) => {
   return (
-    <div className="rounded-md border px-2 py-0.5 text-xs bg-background grow">
-      {name}, <span className="text-muted-foreground">{email}</span>
+    <div
+      className="overflow-hidden relative rounded-md border px-2 py-0.5 text-xs bg-background grow group"
+      onClick={(e) => handleDelete}
+    >
+      {user.name}, <span className="text-muted-foreground">{user.email}</span>
+      <div className="inset-0 flex items-center justify-center absolute group-hover:opacity-90 opacity-0 transition-opacity bg-red-500">
+        <Trash2 className="w-4 h-4 text-white" />
+      </div>
     </div>
   );
 };
