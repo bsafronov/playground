@@ -1,8 +1,8 @@
 "use client";
 
 import { User, users } from "@/consts/users";
-import { Select } from "@/ui/select";
-import { Trash2 } from "lucide-react";
+import { Select } from "@/ui/select-refactor";
+// import { Select } from "@/ui/select";
 import { useState } from "react";
 
 export default function Home() {
@@ -16,10 +16,9 @@ export default function Home() {
         options={users}
         value={multiValue}
         onChange={(v) => setMultiValue(v)}
-        renderOption={"name"}
-        renderSelected={"name"}
-        searchBy={["name", "email", "region"]}
-        listType="popover"
+        renderOption={RenderItem}
+        renderSelected={RenderSelectedItem}
+        searchBy={"name"}
       />
     </div>
   );
@@ -39,16 +38,13 @@ const RenderItem = ({ age, name, email, phone, region }: User) => {
   );
 };
 
-const RenderSelectedItem = (user: User, handleDelete: Function) => {
+const RenderSelectedItem = (user: User, handleDelete: () => void) => {
   return (
     <div
-      className="overflow-hidden relative rounded-md border px-2 py-0.5 text-xs bg-background grow group"
-      onClick={(e) => handleDelete}
+      className="overflow-hidden relative rounded-md border px-2 py-0.5 text-xs bg-background grow"
+      onClick={handleDelete}
     >
       {user.name}, <span className="text-muted-foreground">{user.email}</span>
-      <div className="inset-0 flex items-center justify-center absolute group-hover:opacity-90 opacity-0 transition-opacity bg-red-500">
-        <Trash2 className="w-4 h-4 text-white" />
-      </div>
     </div>
   );
 };
